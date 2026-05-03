@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -254,6 +253,7 @@ h+=`<div class="day-meta"><div class="df">${fmt(d)}</div><div class="ds">${fe.le
 h+=`<div class="day-badges">${today?'<span class="today-badge">Today</span>':''}${fe.length>=3?'<span class="badge-count">Heavy day</span>':''}</div></div>`;
 h+=`<div class="transport"><div class="transport-chip pickup">${carI}<div><div class="tl">Home pickup</div><strong>${day.pickup}</strong></div></div>`;
 h+=`<div class="transport-chip collect">${schI}<div><div class="tl">School collect</div><strong>${day.collect}</strong></div></div></div>`;
+if(day.note) h+=`<div class="transport-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>${day.note}</div>`;
 fe.forEach(ex=>{
 h+=`<div class="exam-row subj-${ex.cat}"><div class="exam-time">${ex.time}</div><div class="exam-dot"></div>`;
 h+=`<div class="exam-info"><div class="exam-subject">${ex.subj}</div><div class="exam-component">${ex.comp}</div></div>`;
