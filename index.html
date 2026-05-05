@@ -6,20 +6,6 @@
 <title>Yusuf Zulfiqar – Exam Timetable Summer 2026</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
-<!--
-  ════════════════════════════════════════════════════════════════
-   CONFIGURATION
-  ════════════════════════════════════════════════════════════════
-   Set ALERT_SERVER_URL below to your Cloudflare tunnel URL, e.g.
-   https://exam-alerts.yourdomain.com
-
-   URL MODES:
-     Full timetable:   index.html
-     Parent controls:  index.html?role=parent
-     Driver view:      index.html?view=driver
-     Combined:         index.html?view=driver&role=parent
-  ════════════════════════════════════════════════════════════════
--->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -38,7 +24,6 @@
 body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;}
 .page-bg{position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(26,74,58,.04),transparent),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(107,76,154,.03),transparent),var(--bg);}
 
-/* ── HEADER ── */
 .header{padding:2rem 1.5rem 1.5rem;text-align:center;border-bottom:1px solid var(--border-light);background:linear-gradient(180deg,#fff 0%,var(--bg) 100%);}
 .header h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:clamp(1.6rem,4vw,2.4rem);color:var(--accent);letter-spacing:-.02em;margin-bottom:.25rem;}
 .header .subtitle{font-size:.85rem;color:var(--text-dim);font-weight:500;letter-spacing:.04em;text-transform:uppercase;}
@@ -50,15 +35,22 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .stat-val{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--accent);}
 .stat-label{font-size:.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-top:.1rem;}
 
-/* ── CONNECTION INDICATOR ── */
-.conn-status{position:fixed;top:12px;right:12px;z-index:200;display:flex;align-items:center;gap:6px;font-size:.65rem;font-weight:600;padding:.3rem .6rem;border-radius:100px;background:var(--surface);border:1px solid var(--border-light);box-shadow:var(--shadow-sm);color:var(--text-dim);transition:all .3s;}
+/* Connection + Notification indicators */
+.top-bar{position:fixed;top:12px;right:12px;z-index:200;display:flex;gap:8px;align-items:center;}
+.conn-status{display:flex;align-items:center;gap:6px;font-size:.65rem;font-weight:600;padding:.3rem .6rem;border-radius:100px;background:var(--surface);border:1px solid var(--border-light);box-shadow:var(--shadow-sm);color:var(--text-dim);transition:all .3s;}
 .conn-dot{width:7px;height:7px;border-radius:50%;background:#ccc;transition:background .3s;}
 .conn-status.connected .conn-dot{background:#2ecc71;}
 .conn-status.disconnected .conn-dot{background:#e74c3c;}
 .conn-status.connecting .conn-dot{background:#f39c12;animation:blink 1s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* ── ALERT BANNER ── */
+.notif-btn{display:flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;font-size:.65rem;font-weight:600;padding:.3rem .6rem;border-radius:100px;border:1px solid var(--border-light);background:var(--surface);color:var(--text-dim);cursor:pointer;box-shadow:var(--shadow-sm);transition:all .2s;}
+.notif-btn:hover{border-color:var(--accent);color:var(--accent);}
+.notif-btn.subscribed{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+.notif-btn.denied{opacity:.5;cursor:not-allowed;}
+.notif-btn svg{width:14px;height:14px;}
+
+/* Alert banner */
 .alert-banner{display:none;max-width:700px;margin:1rem auto;padding:0 1rem;}
 .alert-banner.active{display:block;}
 .alert-inner{background:var(--alert-bg);border:2px solid var(--alert-border);border-radius:var(--radius);padding:1rem 1.25rem;animation:alertPulse 3s ease-in-out infinite;}
@@ -72,7 +64,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .alert-time-box{display:inline-flex;align-items:center;gap:.4rem;background:#fff;border:1px solid var(--alert-border);padding:.25rem .7rem;border-radius:8px;margin-top:.4rem;font-weight:700;font-size:1rem;color:var(--alert-red);}
 .alert-time-box .original{text-decoration:line-through;opacity:.5;font-size:.8rem;font-weight:500;color:var(--text-dim);}
 
-/* ── DRIVER VIEW ── */
+/* Driver view */
 body.driver-mode .header{padding:1.5rem 1rem 1rem;}
 body.driver-mode .header h1{font-size:1.6rem;}
 body.driver-mode .stats,.driver-hide{display:none;}
@@ -91,7 +83,7 @@ body.driver-mode .footer{font-size:.75rem;}
 .driver-label{display:none;text-align:center;padding:.5rem;font-size:.7rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;}
 body.driver-mode .driver-label{display:block;}
 
-/* ── PARENT CONTROLS ── */
+/* Parent controls */
 .parent-panel{display:none;max-width:700px;margin:0 auto;padding:.75rem 1rem;}
 .parent-panel.visible{display:block;}
 .parent-inner{background:#fff5f5;border:1px solid #f5c6c0;border-radius:var(--radius);padding:.85rem 1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
@@ -105,7 +97,7 @@ body.driver-mode .driver-label{display:block;}
 .hypo-btn.clear-alert:hover{background:#1e8449;}
 .hypo-btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
 
-/* ── CONTROLS ── */
+/* Controls */
 .controls{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;padding:1rem 1.5rem;position:sticky;top:0;z-index:100;background:rgba(250,248,244,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border-light);}
 .filter-btn{font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;padding:.4rem .8rem;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text-mid);cursor:pointer;transition:all .2s;}
 .filter-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -114,7 +106,7 @@ body.driver-mode .driver-label{display:block;}
 .view-toggle button{font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:600;padding:.35rem .7rem;border:none;background:var(--surface);color:var(--text-dim);cursor:pointer;transition:all .2s;}
 .view-toggle button.active{background:var(--accent);color:#fff;}
 
-/* ── TIMELINE ── */
+/* Timeline */
 .timeline{max-width:700px;margin:0 auto;padding:1rem 1rem 3rem;}
 .month-label{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:1.3rem;color:var(--accent);padding:1.5rem 0 .75rem .5rem;border-bottom:2px solid var(--accent);margin-bottom:1rem;}
 
@@ -189,7 +181,7 @@ body.driver-mode .driver-label{display:block;}
   .parent-inner{flex-direction:column;text-align:center;}
 }
 @media print{
-  .controls,.view-toggle,.filter-btn,.parent-panel,.conn-status{display:none!important;}
+  .controls,.view-toggle,.filter-btn,.parent-panel,.top-bar{display:none!important;}
   .page-bg{display:none;}.day-card{break-inside:avoid;box-shadow:none;border:1px solid #ccc;}
   .day-card.is-past{opacity:1;}body{background:#fff;}
 }
@@ -197,7 +189,14 @@ body.driver-mode .driver-label{display:block;}
 </head>
 <body>
 <div class="page-bg"></div>
-<div class="conn-status connecting" id="connStatus"><div class="conn-dot"></div><span>Connecting…</span></div>
+
+<div class="top-bar">
+  <button class="notif-btn" id="notifBtn" onclick="togglePush()" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    <span>Enable Alerts</span>
+  </button>
+  <div class="conn-status connecting" id="connStatus"><div class="conn-dot"></div><span>Connecting…</span></div>
+</div>
 
 <header class="header">
   <h1>Yusuf Zulfiqar</h1>
@@ -250,16 +249,17 @@ body.driver-mode .driver-label{display:block;}
 
 <script>
 // ════════════════════════════════════════════════════════════
-//  CONFIG — Set this to your Cloudflare tunnel URL
+//  CONFIG
 // ════════════════════════════════════════════════════════════
 const ALERT_SERVER_URL = 'https://exam.canvi.academy';
 const DELAY_MINUTES = 45;
+const VAPID_PUBLIC = 'BPmysJp1PlH7AR3KiN-uFVxycsoLcDDmQfbg_4XICJ39UPsIKX9EIa-avxssvJvHxJdQBaMuFbVeHNsg660cYog';
 
 // ════════════════════════════════════════════════════════════
 //  EXAM DATA
 // ════════════════════════════════════════════════════════════
 const DATA=[
-{date:'2026-05-06',pickup:'11:30 AM',collect:'4:00 PM',note:'Library revision after exam – joint pickup with Ayesha',exams:[
+{date:'2026-05-06',pickup:'11:30 AM',collect:'4:00 PM',note:'Library revision after exam \u2013 joint pickup with Ayesha',exams:[
   {time:'1:00 PM',dur:'2h 00m',board:'CIE',subj:'English Language',comp:'Reading Paper 1',room:'Room 180',seat:'A1',cat:'eng'}]},
 {date:'2026-05-08',pickup:'7:30 AM',collect:'1:30 PM',exams:[
   {time:'9:00 AM',dur:'1h 30m',board:'CIE',subj:'English Literature',comp:'Poetry and Prose',room:'Room 180',seat:'A1',cat:'eng'},
@@ -268,8 +268,8 @@ const DATA=[
   {time:'9:00 AM',dur:'0h 45m',board:'CIE',subj:'English Literature',comp:'Drama (Open Text)',room:'Room 180',seat:'C2',cat:'eng'},
   {time:'10:05 AM',dur:'1h 15m',board:'CIE',subj:'English Literature',comp:'Unseen',room:'Room 180',seat:'C2',cat:'eng'},
   {time:'1:00 PM',dur:'1h 30m',board:'OCR',subj:'Classical Greek',comp:'Language Written',room:'Room 180',seat:'C2',cat:'grk'}]},
-{date:'2026-05-12',pickup:'7:30 AM',collect:'4:00 PM',note:'Library revision after exam – joint pickup with Ayesha',exams:[
-  {time:'9:00 AM',dur:'1h 45m',board:'AQA',subj:'Religious Studies',comp:'Paper 1 – Buddhism',room:'Room 180',seat:'C2',cat:'rs'},
+{date:'2026-05-12',pickup:'7:30 AM',collect:'4:00 PM',note:'Library revision after exam \u2013 joint pickup with Ayesha',exams:[
+  {time:'9:00 AM',dur:'1h 45m',board:'AQA',subj:'Religious Studies',comp:'Paper 1 \u2013 Buddhism',room:'Room 180',seat:'C2',cat:'rs'},
   {time:'1:00 PM',dur:'2h 00m',board:'Edexcel',subj:'Biology',comp:'Written Paper 1B',room:'Room 180',seat:'C2',cat:'bio'}]},
 {date:'2026-05-13',pickup:'7:30 AM',collect:'10:10 AM',exams:[
   {time:'9:00 AM',dur:'1h 10m',board:'Edexcel',subj:'Geography',comp:'Physical Geography',room:'Room 180',seat:'C2',cat:'geo'}]},
@@ -280,10 +280,10 @@ const DATA=[
 {date:'2026-05-18',pickup:'7:30 AM',collect:'11:00 AM',exams:[
   {time:'9:00 AM',dur:'2h 00m',board:'Edexcel',subj:'Chemistry',comp:'Written Paper 1C',room:'Room 180',seat:'C2',cat:'sci'}]},
 {date:'2026-05-20',pickup:'11:30 AM',collect:'2:45 PM',exams:[
-  {time:'1:00 PM',dur:'1h 45m',board:'AQA',subj:'Religious Studies',comp:'Paper 2A – Islam',room:'Room 180',seat:'C2',cat:'rs'}]},
+  {time:'1:00 PM',dur:'1h 45m',board:'AQA',subj:'Religious Studies',comp:'Paper 2A \u2013 Islam',room:'Room 180',seat:'C2',cat:'rs'}]},
 {date:'2026-05-21',pickup:'10:45 AM',collect:'4:00 PM',exams:[
   {time:'12:15 PM',dur:'2h 00m',board:'CIE',subj:'English Language',comp:'Directed Writing & Composition',room:'Room 180',seat:'C2',cat:'eng'},
-  {time:'3:00 PM',dur:'1h 00m',board:'WJEC',subj:'Latin',comp:'Literature – Narratives (Comp 3A)',room:'Room 180',seat:'C2',cat:'lat'}]},
+  {time:'3:00 PM',dur:'1h 00m',board:'WJEC',subj:'Latin',comp:'Literature \u2013 Narratives (Comp 3A)',room:'Room 180',seat:'C2',cat:'lat'}]},
 {date:'2026-05-22',pickup:'11:30 AM',collect:'2:00 PM',exams:[
   {time:'1:00 PM',dur:'1h 00m',board:'OCR',subj:'Classical Greek',comp:'Prose Literature A Written',room:'Room 180',seat:'C2',cat:'grk'}]},
 {date:'2026-06-01',pickup:'11:30 AM',collect:'2:00 PM',exams:[
@@ -306,17 +306,16 @@ const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturda
 const MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 // ════════════════════════════════════════════════════════════
-//  URL PARAMS & MODES
+//  URL PARAMS
 // ════════════════════════════════════════════════════════════
-const params = new URLSearchParams(window.location.search);
-const isParent = params.get('role') === 'parent';
-const isDriver = params.get('view') === 'driver';
-
-if (isDriver) document.body.classList.add('driver-mode');
-if (isParent) document.getElementById('parentPanel').classList.add('visible');
+const params=new URLSearchParams(window.location.search);
+const isParent=params.get('role')==='parent';
+const isDriver=params.get('view')==='driver';
+if(isDriver)document.body.classList.add('driver-mode');
+if(isParent)document.getElementById('parentPanel').classList.add('visible');
 
 // ════════════════════════════════════════════════════════════
-//  TIME UTILITIES
+//  UTILITIES
 // ════════════════════════════════════════════════════════════
 function pd(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
 function fmt(d){return DAYS[d.getDay()]+' '+d.getDate()+' '+MO[d.getMonth()];}
@@ -324,190 +323,193 @@ function isToday(d){const t=new Date();return d.getFullYear()===t.getFullYear()&
 function isPast(d){const t=new Date();t.setHours(0,0,0,0);return d<t;}
 function todayStr(){const t=new Date();return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;}
 
-function addMinutes(timeStr, mins) {
-  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-  if (!match) return timeStr;
-  let h = parseInt(match[1]), m = parseInt(match[2]);
-  const period = match[3].toUpperCase();
-  if (period === 'PM' && h !== 12) h += 12;
-  if (period === 'AM' && h === 12) h = 0;
-  const total = h * 60 + m + mins;
-  let nh = Math.floor(total / 60) % 24, nm = total % 60;
-  const np = nh >= 12 ? 'PM' : 'AM';
-  if (nh > 12) nh -= 12;
-  if (nh === 0) nh = 12;
+function addMinutes(timeStr,mins){
+  const m=timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if(!m)return timeStr;
+  let h=parseInt(m[1]),mi=parseInt(m[2]);
+  const p=m[3].toUpperCase();
+  if(p==='PM'&&h!==12)h+=12;if(p==='AM'&&h===12)h=0;
+  const total=h*60+mi+mins;
+  let nh=Math.floor(total/60)%24,nm=total%60;
+  const np=nh>=12?'PM':'AM';
+  if(nh>12)nh-=12;if(nh===0)nh=12;
   return `${nh}:${String(nm).padStart(2,'0')} ${np}`;
 }
 
 // ════════════════════════════════════════════════════════════
-//  ALERT STATE
+//  PUSH NOTIFICATIONS
 // ════════════════════════════════════════════════════════════
-let alerts = {};
-let eventSource = null;
+let pushSubscription = null;
 
-function setConnStatus(status, label) {
-  const el = document.getElementById('connStatus');
-  el.className = 'conn-status ' + status;
-  el.querySelector('span').textContent = label;
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = window.atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; ++i) arr[i] = raw.charCodeAt(i);
+  return arr;
 }
 
-function connectSSE() {
-  if (!ALERT_SERVER_URL) {
-    setConnStatus('disconnected', 'No server configured');
+async function initPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+  // Show the notification button
+  document.getElementById('notifBtn').style.display = 'flex';
+
+  try {
+    const reg = await navigator.serviceWorker.register('./sw.js');
+    await navigator.serviceWorker.ready;
+
+    // Check existing subscription
+    pushSubscription = await reg.pushManager.getSubscription();
+    updateNotifButton();
+  } catch (e) {
+    console.error('[push] SW registration failed:', e);
+  }
+}
+
+async function togglePush() {
+  if (Notification.permission === 'denied') {
+    alert('Notifications are blocked. Please enable them in your browser settings for this site.');
     return;
   }
 
-  setConnStatus('connecting', 'Connecting…');
-
-  eventSource = new EventSource(ALERT_SERVER_URL + '/events');
-
-  eventSource.onopen = () => {
-    setConnStatus('connected', 'Live');
-  };
-
-  eventSource.onmessage = (event) => {
+  if (pushSubscription) {
+    // Unsubscribe
     try {
-      const data = JSON.parse(event.data);
-      if (data.type === 'init') {
-        alerts = data.alerts || {};
-      } else if (data.type === 'alert') {
-        alerts[data.date] = data.alert;
-      } else if (data.type === 'clear') {
-        if (alerts[data.date]) alerts[data.date].active = false;
-      }
-      render();
-      updateAlertBanner();
-      updateParentButtons();
+      await fetch(ALERT_SERVER_URL + '/push/unsubscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: pushSubscription.endpoint })
+      });
+      await pushSubscription.unsubscribe();
+      pushSubscription = null;
+      updateNotifButton();
     } catch (e) {
-      console.error('SSE parse error:', e);
+      console.error('[push] Unsubscribe failed:', e);
     }
-  };
+  } else {
+    // Subscribe
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        updateNotifButton();
+        return;
+      }
 
-  eventSource.onerror = () => {
-    setConnStatus('disconnected', 'Reconnecting…');
-    eventSource.close();
-    // Reconnect after 3 seconds
-    setTimeout(connectSSE, 3000);
-  };
-}
+      const reg = await navigator.serviceWorker.ready;
+      pushSubscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+      });
 
-function updateAlertBanner() {
-  const banner = document.getElementById('alertBanner');
-  const body = document.getElementById('alertBody');
-  const today = todayStr();
+      await fetch(ALERT_SERVER_URL + '/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pushSubscription)
+      });
 
-  // Find any active alert for today or future
-  let activeDate = null;
-  let activeAlert = null;
-  for (const [date, alert] of Object.entries(alerts)) {
-    if (alert.active && !isPast(pd(date))) {
-      activeDate = date;
-      activeAlert = alert;
-      break;
+      updateNotifButton();
+    } catch (e) {
+      console.error('[push] Subscribe failed:', e);
+      alert('Failed to enable notifications. Please try again.');
     }
   }
+}
 
-  if (activeDate && activeAlert) {
-    const day = DATA.find(d => d.date === activeDate);
-    if (day) {
-      const original = day.collect;
-      const adjusted = addMinutes(original, DELAY_MINUTES);
-      const d = pd(activeDate);
-      body.innerHTML = `
-        Yusuf has gone low during his exam on <strong>${fmt(d)}</strong>.<br>
-        The exam is paused and will be extended by ${DELAY_MINUTES} minutes under JCQ regulations.<br><br>
-        <div class="alert-time-box">
-          <span class="original">${original}</span> → <strong>${adjusted}</strong>
-        </div>
-        <br>Adjusted school collection time shown above.
-      `;
+function updateNotifButton() {
+  const btn = document.getElementById('notifBtn');
+  const label = btn.querySelector('span');
+
+  if (Notification.permission === 'denied') {
+    btn.className = 'notif-btn denied';
+    label.textContent = 'Blocked';
+  } else if (pushSubscription) {
+    btn.className = 'notif-btn subscribed';
+    label.textContent = 'Alerts On';
+  } else {
+    btn.className = 'notif-btn';
+    label.textContent = 'Enable Alerts';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  SSE & ALERT STATE
+// ════════════════════════════════════════════════════════════
+let alerts={};
+let eventSource=null;
+
+function setConnStatus(s,l){
+  const el=document.getElementById('connStatus');
+  el.className='conn-status '+s;el.querySelector('span').textContent=l;
+}
+
+function connectSSE(){
+  if(!ALERT_SERVER_URL){setConnStatus('disconnected','No server');return;}
+  setConnStatus('connecting','Connecting…');
+  eventSource=new EventSource(ALERT_SERVER_URL+'/events');
+  eventSource.onopen=()=>setConnStatus('connected','Live');
+  eventSource.onmessage=(event)=>{
+    try{
+      const data=JSON.parse(event.data);
+      if(data.type==='init')alerts=data.alerts||{};
+      else if(data.type==='alert')alerts[data.date]=data.alert;
+      else if(data.type==='clear')if(alerts[data.date])alerts[data.date].active=false;
+      render();updateAlertBanner();updateParentButtons();
+    }catch(e){console.error('SSE parse error:',e);}
+  };
+  eventSource.onerror=()=>{setConnStatus('disconnected','Reconnecting…');eventSource.close();setTimeout(connectSSE,3000);};
+}
+
+function updateAlertBanner(){
+  const banner=document.getElementById('alertBanner');
+  const body=document.getElementById('alertBody');
+  let activeDate=null,activeAlert=null;
+  for(const[date,alert]of Object.entries(alerts)){
+    if(alert.active&&!isPast(pd(date))){activeDate=date;activeAlert=alert;break;}
+  }
+  if(activeDate&&activeAlert){
+    const day=DATA.find(d=>d.date===activeDate);
+    if(day){
+      const original=day.collect,adjusted=addMinutes(original,DELAY_MINUTES),d=pd(activeDate);
+      body.innerHTML=`Yusuf has gone low during his exam on <strong>${fmt(d)}</strong>.<br>The exam is paused and will be extended by ${DELAY_MINUTES} minutes under JCQ regulations.<br><br><div class="alert-time-box"><span class="original">${original}</span> → <strong>${adjusted}</strong></div><br>Adjusted school collection time shown above.`;
       banner.classList.add('active');
     }
-  } else {
-    banner.classList.remove('active');
+  }else{banner.classList.remove('active');}
+}
+
+function updateParentButtons(){
+  const today=todayStr(),alert=alerts[today];
+  const trigger=document.getElementById('hypoTrigger'),clear=document.getElementById('hypoClear');
+  if(alert&&alert.active){trigger.style.display='none';clear.style.display='flex';}
+  else{trigger.style.display='flex';clear.style.display='none';}
+}
+
+async function triggerAlert(){
+  const today=todayStr(),day=DATA.find(d=>d.date===today);
+  if(!day){alert('No exam scheduled today.');return;}
+  const btn=document.getElementById('hypoTrigger');btn.disabled=true;btn.innerHTML='Sending…';
+  if(!ALERT_SERVER_URL){alerts[today]={active:true,triggeredAt:new Date().toISOString(),delayMinutes:DELAY_MINUTES};render();updateAlertBanner();updateParentButtons();return;}
+  try{
+    const res=await fetch(ALERT_SERVER_URL+'/alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:today})});
+    if(!res.ok)throw new Error('Server error');
+  }catch(e){
+    console.error('Alert trigger failed:',e);alert('Failed to send alert.');
+    btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Trigger Hypo Alert';
   }
 }
 
-function updateParentButtons() {
-  const today = todayStr();
-  const alert = alerts[today];
-  const trigger = document.getElementById('hypoTrigger');
-  const clear = document.getElementById('hypoClear');
-  if (alert && alert.active) {
-    trigger.style.display = 'none';
-    clear.style.display = 'flex';
-  } else {
-    trigger.style.display = 'flex';
-    clear.style.display = 'none';
-  }
-}
-
-async function triggerAlert() {
-  const today = todayStr();
-  const day = DATA.find(d => d.date === today);
-  if (!day) {
-    alert('No exam scheduled today. Alert can only be triggered on exam days.');
-    return;
-  }
-
-  const btn = document.getElementById('hypoTrigger');
-  btn.disabled = true;
-  btn.innerHTML = 'Sending…';
-
-  if (!ALERT_SERVER_URL) {
-    // Offline mode — update locally
-    alerts[today] = { active: true, triggeredAt: new Date().toISOString(), delayMinutes: DELAY_MINUTES };
-    render(); updateAlertBanner(); updateParentButtons();
-    return;
-  }
-
-  try {
-    const res = await fetch(ALERT_SERVER_URL + '/alert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: today })
-    });
-    if (!res.ok) throw new Error('Server error');
-    // SSE will handle the state update
-  } catch (e) {
-    console.error('Alert trigger failed:', e);
-    alert('Failed to send alert. Check server connection.');
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Trigger Hypo Alert';
-  }
-}
-
-async function clearAlert() {
-  const today = todayStr();
-  const btn = document.getElementById('hypoClear');
-  btn.disabled = true;
-  btn.innerHTML = 'Clearing…';
-
-  if (!ALERT_SERVER_URL) {
-    if (alerts[today]) alerts[today].active = false;
-    render(); updateAlertBanner(); updateParentButtons();
-    return;
-  }
-
-  try {
-    await fetch(ALERT_SERVER_URL + '/clear', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: today })
-    });
-  } catch (e) {
-    console.error('Clear failed:', e);
-    alert('Failed to clear alert. Check server connection.');
-    btn.disabled = false;
-    btn.innerHTML = '✓ Clear Alert';
-  }
+async function clearAlert(){
+  const today=todayStr(),btn=document.getElementById('hypoClear');btn.disabled=true;btn.innerHTML='Clearing…';
+  if(!ALERT_SERVER_URL){if(alerts[today])alerts[today].active=false;render();updateAlertBanner();updateParentButtons();return;}
+  try{await fetch(ALERT_SERVER_URL+'/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:today})});}
+  catch(e){console.error('Clear failed:',e);alert('Failed to clear.');btn.disabled=false;btn.innerHTML='✓ Clear Alert';}
 }
 
 // ════════════════════════════════════════════════════════════
 //  RENDER
 // ════════════════════════════════════════════════════════════
 let af='all',vm='detail';
-
 const carI=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-5H7L5 12z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>`;
 const schI=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22V8l10-6 10 6v14"/><path d="M6 12v6h4v-6"/><path d="M14 12v6h4v-6"/><path d="M12 7v1"/></svg>`;
 const bookI=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`;
@@ -556,12 +558,8 @@ function render(){
   tl.className='timeline'+(vm==='list'?' list-view':'');
   let h='',cm='',dl=0;
   const now=new Date();now.setHours(0,0,0,0);
-
-  // In driver mode, only show today and future
-  const filteredData = isDriver ? DATA.filter(d => pd(d.date) >= now) : DATA;
-
-  // In driver mode, show max 3 upcoming days
-  const displayData = isDriver ? filteredData.slice(0, 3) : filteredData;
+  const filteredData=isDriver?DATA.filter(d=>pd(d.date)>=now):DATA;
+  const displayData=isDriver?filteredData.slice(0,3):filteredData;
 
   displayData.forEach(day=>{
     const d=pd(day.date),today=isToday(d),past=isPast(d);
@@ -569,24 +567,18 @@ function render(){
     if(!fe.length)return;
     const m=MO[d.getMonth()]+' '+d.getFullYear();
     if(m!==cm){cm=m;h+=`<div class="month-label">${m}</div>`;}
-
-    const hasAlert = alerts[day.date] && alerts[day.date].active;
+    const hasAlert=alerts[day.date]&&alerts[day.date].active;
     const cls='day-card'+(today?' is-today':'')+(past&&!today?' is-past':'')+(hasAlert?' has-alert':'');
-
     h+=`<div class="${cls}" style="animation-delay:${dl*40}ms">`;
     h+=`<div class="day-header"><div class="day-date-circle"><span class="dn">${d.getDate()}</span><span class="da">${DAYS[d.getDay()].slice(0,3)}</span></div>`;
     h+=`<div class="day-meta"><div class="df">${fmt(d)}</div><div class="ds">${fe.length} paper${fe.length>1?'s':''} &middot; ${fe.map(e=>e.subj).filter((v,i,a)=>a.indexOf(v)===i).join(', ')}</div></div>`;
     h+=`<div class="day-badges">${today?'<span class="today-badge">Today</span>':''}${fe.length>=3?'<span class="badge-count">Heavy day</span>':''}${hasAlert?'<span class="badge-count" style="background:#fef0ee;color:#c0392b">⚠ Hypo Alert</span>':''}</div></div>`;
 
-    // Transport row
-    const collectTime = hasAlert ? addMinutes(day.collect, DELAY_MINUTES) : day.collect;
-    const collectClass = hasAlert ? 'transport-chip collect delayed' : 'transport-chip collect';
-
+    const collectTime=hasAlert?addMinutes(day.collect,DELAY_MINUTES):day.collect;
+    const collectClass=hasAlert?'transport-chip collect delayed':'transport-chip collect';
     h+=`<div class="transport"><div class="transport-chip pickup">${carI}<div><div class="tl">Home pickup</div><strong>${day.pickup}</strong></div></div>`;
-    h+=`<div class="${collectClass}">${schI}<div><div class="tl">School collect${hasAlert ? ' (delayed)' : ''}</div><strong>${collectTime}</strong>${hasAlert ? `<div class="delayed-note">Was ${day.collect} · +${DELAY_MINUTES}min hypo</div>` : ''}</div></div></div>`;
-
-    // Library note
-    if(day.note) h+=`<div class="transport-note">${bookI}${day.note}</div>`;
+    h+=`<div class="${collectClass}">${schI}<div><div class="tl">School collect${hasAlert?' (delayed)':''}</div><strong>${collectTime}</strong>${hasAlert?`<div class="delayed-note">Was ${day.collect} · +${DELAY_MINUTES}min hypo</div>`:''}</div></div></div>`;
+    if(day.note)h+=`<div class="transport-note">${bookI}${day.note}</div>`;
 
     fe.forEach(ex=>{
       h+=`<div class="exam-row subj-${ex.cat}"><div class="exam-time">${ex.time}</div><div class="exam-dot"></div>`;
@@ -596,10 +588,7 @@ function render(){
     h+=`</div>`;dl++;
   });
 
-  if (isDriver && displayData.length === 0) {
-    h = '<div style="text-align:center;padding:3rem;color:var(--text-dim);font-size:1.1rem;">All exams complete ✓</div>';
-  }
-
+  if(isDriver&&displayData.length===0)h='<div style="text-align:center;padding:3rem;color:var(--text-dim);font-size:1.1rem;">All exams complete ✓</div>';
   tl.innerHTML=h;
   const tc=tl.querySelector('.is-today');
   if(tc)setTimeout(()=>tc.scrollIntoView({behavior:'smooth',block:'center'}),300);
@@ -609,12 +598,11 @@ function render(){
 //  INIT
 // ════════════════════════════════════════════════════════════
 buildStats();
-if (!isDriver) { buildControls(); buildLegend(); }
+if(!isDriver){buildControls();buildLegend();}
 render();
 connectSSE();
-
-// Refresh stats every minute (for completion tracking)
-setInterval(buildStats, 60000);
+initPush();
+setInterval(buildStats,60000);
 </script>
 </body>
 </html>
