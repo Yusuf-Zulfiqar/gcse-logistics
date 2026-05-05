@@ -4,7 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Yusuf Zulfiqar – Exam Timetable Summer 2026</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+<!--
+  ════════════════════════════════════════════════════════════════
+   CONFIGURATION
+  ════════════════════════════════════════════════════════════════
+   Set ALERT_SERVER_URL below to your Cloudflare tunnel URL, e.g.
+   https://exam-alerts.yourdomain.com
+
+   URL MODES:
+     Full timetable:   index.html
+     Parent controls:  index.html?role=parent
+     Driver view:      index.html?view=driver
+     Combined:         index.html?view=driver&role=parent
+  ════════════════════════════════════════════════════════════════
+-->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -13,6 +28,7 @@
   --accent:#1a4a3a;--accent-light:#e8f0ec;
   --pickup-bg:#fef7ec;--pickup-border:#f0d68a;--pickup-text:#7a5c1f;
   --collect-bg:#edf4fe;--collect-border:#8ab4f0;--collect-text:#1f4a7a;
+  --alert-red:#c0392b;--alert-bg:#fef0ee;--alert-border:#f5c6c0;
   --eng:#6b4c9a;--math:#c05830;--sci:#1a7a5a;
   --geo:#3a7ab8;--rs:#9a6b30;--lat:#8a3a5a;--grk:#3a5a8a;
   --shadow-sm:0 1px 3px rgba(44,36,24,.06);
@@ -22,6 +38,7 @@
 body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;}
 .page-bg{position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(26,74,58,.04),transparent),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(107,76,154,.03),transparent),var(--bg);}
 
+/* ── HEADER ── */
 .header{padding:2rem 1.5rem 1.5rem;text-align:center;border-bottom:1px solid var(--border-light);background:linear-gradient(180deg,#fff 0%,var(--bg) 100%);}
 .header h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:clamp(1.6rem,4vw,2.4rem);color:var(--accent);letter-spacing:-.02em;margin-bottom:.25rem;}
 .header .subtitle{font-size:.85rem;color:var(--text-dim);font-weight:500;letter-spacing:.04em;text-transform:uppercase;}
@@ -33,6 +50,62 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .stat-val{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--accent);}
 .stat-label{font-size:.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-top:.1rem;}
 
+/* ── CONNECTION INDICATOR ── */
+.conn-status{position:fixed;top:12px;right:12px;z-index:200;display:flex;align-items:center;gap:6px;font-size:.65rem;font-weight:600;padding:.3rem .6rem;border-radius:100px;background:var(--surface);border:1px solid var(--border-light);box-shadow:var(--shadow-sm);color:var(--text-dim);transition:all .3s;}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:#ccc;transition:background .3s;}
+.conn-status.connected .conn-dot{background:#2ecc71;}
+.conn-status.disconnected .conn-dot{background:#e74c3c;}
+.conn-status.connecting .conn-dot{background:#f39c12;animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── ALERT BANNER ── */
+.alert-banner{display:none;max-width:700px;margin:1rem auto;padding:0 1rem;}
+.alert-banner.active{display:block;}
+.alert-inner{background:var(--alert-bg);border:2px solid var(--alert-border);border-radius:var(--radius);padding:1rem 1.25rem;animation:alertPulse 3s ease-in-out infinite;}
+@keyframes alertPulse{0%,100%{border-color:var(--alert-border)}50%{border-color:var(--alert-red)}}
+.alert-header{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;}
+.alert-icon{width:28px;height:28px;background:var(--alert-red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;flex-shrink:0;animation:shake .5s ease-in-out infinite alternate;}
+@keyframes shake{0%{transform:rotate(-3deg)}100%{transform:rotate(3deg)}}
+.alert-title{font-weight:700;font-size:1rem;color:var(--alert-red);}
+.alert-body{font-size:.85rem;color:#6b2d25;line-height:1.6;}
+.alert-body strong{font-size:1.1rem;}
+.alert-time-box{display:inline-flex;align-items:center;gap:.4rem;background:#fff;border:1px solid var(--alert-border);padding:.25rem .7rem;border-radius:8px;margin-top:.4rem;font-weight:700;font-size:1rem;color:var(--alert-red);}
+.alert-time-box .original{text-decoration:line-through;opacity:.5;font-size:.8rem;font-weight:500;color:var(--text-dim);}
+
+/* ── DRIVER VIEW ── */
+body.driver-mode .header{padding:1.5rem 1rem 1rem;}
+body.driver-mode .header h1{font-size:1.6rem;}
+body.driver-mode .stats,.driver-hide{display:none;}
+body.driver-mode .controls{display:none;}
+body.driver-mode .legend{display:none;}
+body.driver-mode .alert-banner{max-width:100%;}
+body.driver-mode .timeline{max-width:100%;padding:1rem;}
+body.driver-mode .day-card.is-past{display:none;}
+body.driver-mode .month-label{display:none;}
+body.driver-mode .day-card{margin-bottom:1.5rem;border-radius:16px;box-shadow:var(--shadow-md);}
+body.driver-mode .day-date-circle{width:56px;height:56px;}
+body.driver-mode .day-date-circle .dn{font-size:1.4rem;}
+body.driver-mode .transport-chip{font-size:.9rem;padding:.5rem .9rem;}
+body.driver-mode .exam-row{padding:.75rem 1.25rem;}
+body.driver-mode .footer{font-size:.75rem;}
+.driver-label{display:none;text-align:center;padding:.5rem;font-size:.7rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;}
+body.driver-mode .driver-label{display:block;}
+
+/* ── PARENT CONTROLS ── */
+.parent-panel{display:none;max-width:700px;margin:0 auto;padding:.75rem 1rem;}
+.parent-panel.visible{display:block;}
+.parent-inner{background:#fff5f5;border:1px solid #f5c6c0;border-radius:var(--radius);padding:.85rem 1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+.parent-inner p{flex:1;font-size:.8rem;color:#6b2d25;min-width:200px;}
+.parent-inner p strong{display:block;font-size:.85rem;margin-bottom:.15rem;}
+.hypo-btn{font-family:'DM Sans',sans-serif;font-weight:700;font-size:.85rem;padding:.6rem 1.2rem;border-radius:10px;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:.4rem;white-space:nowrap;}
+.hypo-btn.trigger{background:var(--alert-red);color:#fff;box-shadow:0 2px 8px rgba(192,57,43,.3);}
+.hypo-btn.trigger:hover{background:#a93226;transform:translateY(-1px);}
+.hypo-btn.trigger:active{transform:translateY(0);}
+.hypo-btn.clear-alert{background:#27ae60;color:#fff;box-shadow:0 2px 8px rgba(39,174,96,.3);}
+.hypo-btn.clear-alert:hover{background:#1e8449;}
+.hypo-btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+
+/* ── CONTROLS ── */
 .controls{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;padding:1rem 1.5rem;position:sticky;top:0;z-index:100;background:rgba(250,248,244,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border-light);}
 .filter-btn{font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;padding:.4rem .8rem;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--text-mid);cursor:pointer;transition:all .2s;}
 .filter-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -41,6 +114,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .view-toggle button{font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:600;padding:.35rem .7rem;border:none;background:var(--surface);color:var(--text-dim);cursor:pointer;transition:all .2s;}
 .view-toggle button.active{background:var(--accent);color:#fff;}
 
+/* ── TIMELINE ── */
 .timeline{max-width:700px;margin:0 auto;padding:1rem 1rem 3rem;}
 .month-label{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:1.3rem;color:var(--accent);padding:1.5rem 0 .75rem .5rem;border-bottom:2px solid var(--accent);margin-bottom:1rem;}
 
@@ -48,7 +122,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .day-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
 .day-card.is-today{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,74,58,.08),var(--shadow-md);}
 .day-card.is-past{opacity:.55;}.day-card.is-past:hover{opacity:.85;}
-@keyframes cardIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.day-card.has-alert{border-color:var(--alert-red);box-shadow:0 0 0 3px rgba(192,57,43,.1),var(--shadow-md);}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
 .day-header{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;border-bottom:1px solid var(--border-light);background:linear-gradient(135deg,rgba(26,74,58,.02),transparent);}
 .day-date-circle{width:44px;height:44px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--accent);color:#fff;flex-shrink:0;}
@@ -59,14 +134,16 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .badge-count{font-size:.65rem;font-weight:700;padding:.15rem .45rem;border-radius:100px;background:var(--accent-light);color:var(--accent);}
 .day-card.is-today .day-date-circle{background:linear-gradient(135deg,#1a4a3a,#2a7a5a);box-shadow:0 2px 8px rgba(26,74,58,.3);}
 .today-badge{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:.15rem .5rem;border-radius:100px;background:#1a4a3a;color:#fff;animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.7;}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
 
 .transport{display:flex;gap:.5rem;padding:.65rem 1rem;border-bottom:1px solid var(--border-light);flex-wrap:wrap;}
 .transport-chip{display:flex;align-items:center;gap:.4rem;font-size:.75rem;font-weight:600;padding:.35rem .7rem;border-radius:8px;flex:1;min-width:140px;}
 .transport-chip.pickup{background:var(--pickup-bg);border:1px solid var(--pickup-border);color:var(--pickup-text);}
 .transport-chip.collect{background:var(--collect-bg);border:1px solid var(--collect-border);color:var(--collect-text);}
+.transport-chip.collect.delayed{background:var(--alert-bg);border-color:var(--alert-red);color:var(--alert-red);}
 .transport-chip svg{width:16px;height:16px;flex-shrink:0;}
 .transport-chip .tl{font-weight:500;opacity:.8;font-size:.65rem;}
+.transport-chip .delayed-note{font-size:.6rem;font-weight:500;opacity:.8;}
 .transport-note{display:flex;align-items:center;gap:.4rem;font-size:.7rem;font-weight:500;color:#5c6b3a;background:#f4f7ec;border:1px solid #d4dfc0;padding:.3rem .7rem;border-radius:8px;margin:0 1rem .5rem;}
 
 .exam-row{display:flex;align-items:center;gap:.65rem;padding:.6rem 1rem;border-bottom:1px solid var(--border-light);transition:background .15s;}
@@ -109,9 +186,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   .exam-meta{flex-direction:column;align-items:flex-end;gap:.2rem;}
   .view-toggle{margin-left:0;}
   .transport{flex-direction:column;gap:.35rem;}
+  .parent-inner{flex-direction:column;text-align:center;}
 }
 @media print{
-  .controls,.view-toggle,.filter-btn{display:none!important;}
+  .controls,.view-toggle,.filter-btn,.parent-panel,.conn-status{display:none!important;}
   .page-bg{display:none;}.day-card{break-inside:avoid;box-shadow:none;border:1px solid #ccc;}
   .day-card.is-past{opacity:1;}body{background:#fff;}
 }
@@ -119,6 +197,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 </head>
 <body>
 <div class="page-bg"></div>
+<div class="conn-status connecting" id="connStatus"><div class="conn-dot"></div><span>Connecting…</span></div>
+
 <header class="header">
   <h1>Yusuf Zulfiqar</h1>
   <div class="subtitle">GCSE Examination Timetable &middot; Summer 2026</div>
@@ -129,16 +209,57 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   </div>
   <div class="stats" id="stats"></div>
 </header>
+
+<div class="driver-label" id="driverLabel">Driver View &middot; Showing today &amp; upcoming only</div>
+
+<div class="alert-banner" id="alertBanner">
+  <div class="alert-inner">
+    <div class="alert-header">
+      <div class="alert-icon">⚠</div>
+      <div class="alert-title">Hypo Alert — Exam Delayed</div>
+    </div>
+    <div class="alert-body" id="alertBody"></div>
+  </div>
+</div>
+
+<div class="parent-panel" id="parentPanel">
+  <div class="parent-inner">
+    <p>
+      <strong>🏥 Parent Hypo Alert Controls</strong>
+      If Yusuf goes low during an exam, trigger the alert below. Iqra's view will update instantly with the adjusted pickup time (+45 min).
+    </p>
+    <button class="hypo-btn trigger" id="hypoTrigger" onclick="triggerAlert()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Trigger Hypo Alert
+    </button>
+    <button class="hypo-btn clear-alert" id="hypoClear" onclick="clearAlert()" style="display:none">
+      ✓ Clear Alert
+    </button>
+  </div>
+</div>
+
 <nav class="controls" id="controls"></nav>
 <main class="timeline" id="timeline"></main>
 <div class="legend"><div class="legend-inner" id="legend"></div></div>
+
 <footer class="footer">
   Pickup from home 1h 30min before first exam &middot; Collect from school after final exam<br>
+  Hypo delay: +45 min added to collection time &middot; Real-time alerts via server<br>
   Generated from KES individual candidate timetable &middot; Updated April 2026
 </footer>
+
 <script>
+// ════════════════════════════════════════════════════════════
+//  CONFIG — Set this to your Cloudflare tunnel URL
+// ════════════════════════════════════════════════════════════
+const ALERT_SERVER_URL = ''; // e.g. 'https://exam-alerts.yourdomain.com'
+const DELAY_MINUTES = 45;
+
+// ════════════════════════════════════════════════════════════
+//  EXAM DATA
+// ════════════════════════════════════════════════════════════
 const DATA=[
-{date:'2026-05-06',pickup:'11:30 AM',collect:'4:00 PM',note:'Library revision after exam \u2013 joint pickup with Ayesha',exams:[
+{date:'2026-05-06',pickup:'11:30 AM',collect:'4:00 PM',note:'Library revision after exam – joint pickup with Ayesha',exams:[
   {time:'1:00 PM',dur:'2h 00m',board:'CIE',subj:'English Language',comp:'Reading Paper 1',room:'Room 180',seat:'A1',cat:'eng'}]},
 {date:'2026-05-08',pickup:'7:30 AM',collect:'1:30 PM',exams:[
   {time:'9:00 AM',dur:'1h 30m',board:'CIE',subj:'English Literature',comp:'Poetry and Prose',room:'Room 180',seat:'A1',cat:'eng'},
@@ -147,8 +268,8 @@ const DATA=[
   {time:'9:00 AM',dur:'0h 45m',board:'CIE',subj:'English Literature',comp:'Drama (Open Text)',room:'Room 180',seat:'C2',cat:'eng'},
   {time:'10:05 AM',dur:'1h 15m',board:'CIE',subj:'English Literature',comp:'Unseen',room:'Room 180',seat:'C2',cat:'eng'},
   {time:'1:00 PM',dur:'1h 30m',board:'OCR',subj:'Classical Greek',comp:'Language Written',room:'Room 180',seat:'C2',cat:'grk'}]},
-{date:'2026-05-12',pickup:'7:30 AM',collect:'4:00 PM',note:'Library revision after exam \u2013 joint pickup with Ayesha',exams:[
-  {time:'9:00 AM',dur:'1h 45m',board:'AQA',subj:'Religious Studies',comp:'Paper 1 \u2013 Buddhism',room:'Room 180',seat:'C2',cat:'rs'},
+{date:'2026-05-12',pickup:'7:30 AM',collect:'4:00 PM',note:'Library revision after exam – joint pickup with Ayesha',exams:[
+  {time:'9:00 AM',dur:'1h 45m',board:'AQA',subj:'Religious Studies',comp:'Paper 1 – Buddhism',room:'Room 180',seat:'C2',cat:'rs'},
   {time:'1:00 PM',dur:'2h 00m',board:'Edexcel',subj:'Biology',comp:'Written Paper 1B',room:'Room 180',seat:'C2',cat:'bio'}]},
 {date:'2026-05-13',pickup:'7:30 AM',collect:'10:10 AM',exams:[
   {time:'9:00 AM',dur:'1h 10m',board:'Edexcel',subj:'Geography',comp:'Physical Geography',room:'Room 180',seat:'C2',cat:'geo'}]},
@@ -159,10 +280,10 @@ const DATA=[
 {date:'2026-05-18',pickup:'7:30 AM',collect:'11:00 AM',exams:[
   {time:'9:00 AM',dur:'2h 00m',board:'Edexcel',subj:'Chemistry',comp:'Written Paper 1C',room:'Room 180',seat:'C2',cat:'sci'}]},
 {date:'2026-05-20',pickup:'11:30 AM',collect:'2:45 PM',exams:[
-  {time:'1:00 PM',dur:'1h 45m',board:'AQA',subj:'Religious Studies',comp:'Paper 2A \u2013 Islam',room:'Room 180',seat:'C2',cat:'rs'}]},
+  {time:'1:00 PM',dur:'1h 45m',board:'AQA',subj:'Religious Studies',comp:'Paper 2A – Islam',room:'Room 180',seat:'C2',cat:'rs'}]},
 {date:'2026-05-21',pickup:'10:45 AM',collect:'4:00 PM',exams:[
   {time:'12:15 PM',dur:'2h 00m',board:'CIE',subj:'English Language',comp:'Directed Writing & Composition',room:'Room 180',seat:'C2',cat:'eng'},
-  {time:'3:00 PM',dur:'1h 00m',board:'WJEC',subj:'Latin',comp:'Literature \u2013 Narratives (Comp 3A)',room:'Room 180',seat:'C2',cat:'lat'}]},
+  {time:'3:00 PM',dur:'1h 00m',board:'WJEC',subj:'Latin',comp:'Literature – Narratives (Comp 3A)',room:'Room 180',seat:'C2',cat:'lat'}]},
 {date:'2026-05-22',pickup:'11:30 AM',collect:'2:00 PM',exams:[
   {time:'1:00 PM',dur:'1h 00m',board:'OCR',subj:'Classical Greek',comp:'Prose Literature A Written',room:'Room 180',seat:'C2',cat:'grk'}]},
 {date:'2026-06-01',pickup:'11:30 AM',collect:'2:00 PM',exams:[
@@ -184,19 +305,217 @@ const SUBJ={eng:{l:'English',c:'#6b4c9a'},math:{l:'Mathematics',c:'#c05830'},bio
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+// ════════════════════════════════════════════════════════════
+//  URL PARAMS & MODES
+// ════════════════════════════════════════════════════════════
+const params = new URLSearchParams(window.location.search);
+const isParent = params.get('role') === 'parent';
+const isDriver = params.get('view') === 'driver';
+
+if (isDriver) document.body.classList.add('driver-mode');
+if (isParent) document.getElementById('parentPanel').classList.add('visible');
+
+// ════════════════════════════════════════════════════════════
+//  TIME UTILITIES
+// ════════════════════════════════════════════════════════════
 function pd(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
 function fmt(d){return DAYS[d.getDay()]+' '+d.getDate()+' '+MO[d.getMonth()];}
 function isToday(d){const t=new Date();return d.getFullYear()===t.getFullYear()&&d.getMonth()===t.getMonth()&&d.getDate()===t.getDate();}
 function isPast(d){const t=new Date();t.setHours(0,0,0,0);return d<t;}
+function todayStr(){const t=new Date();return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;}
 
+function addMinutes(timeStr, mins) {
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return timeStr;
+  let h = parseInt(match[1]), m = parseInt(match[2]);
+  const period = match[3].toUpperCase();
+  if (period === 'PM' && h !== 12) h += 12;
+  if (period === 'AM' && h === 12) h = 0;
+  const total = h * 60 + m + mins;
+  let nh = Math.floor(total / 60) % 24, nm = total % 60;
+  const np = nh >= 12 ? 'PM' : 'AM';
+  if (nh > 12) nh -= 12;
+  if (nh === 0) nh = 12;
+  return `${nh}:${String(nm).padStart(2,'0')} ${np}`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  ALERT STATE
+// ════════════════════════════════════════════════════════════
+let alerts = {};
+let eventSource = null;
+
+function setConnStatus(status, label) {
+  const el = document.getElementById('connStatus');
+  el.className = 'conn-status ' + status;
+  el.querySelector('span').textContent = label;
+}
+
+function connectSSE() {
+  if (!ALERT_SERVER_URL) {
+    setConnStatus('disconnected', 'No server configured');
+    return;
+  }
+
+  setConnStatus('connecting', 'Connecting…');
+
+  eventSource = new EventSource(ALERT_SERVER_URL + '/events');
+
+  eventSource.onopen = () => {
+    setConnStatus('connected', 'Live');
+  };
+
+  eventSource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'init') {
+        alerts = data.alerts || {};
+      } else if (data.type === 'alert') {
+        alerts[data.date] = data.alert;
+      } else if (data.type === 'clear') {
+        if (alerts[data.date]) alerts[data.date].active = false;
+      }
+      render();
+      updateAlertBanner();
+      updateParentButtons();
+    } catch (e) {
+      console.error('SSE parse error:', e);
+    }
+  };
+
+  eventSource.onerror = () => {
+    setConnStatus('disconnected', 'Reconnecting…');
+    eventSource.close();
+    // Reconnect after 3 seconds
+    setTimeout(connectSSE, 3000);
+  };
+}
+
+function updateAlertBanner() {
+  const banner = document.getElementById('alertBanner');
+  const body = document.getElementById('alertBody');
+  const today = todayStr();
+
+  // Find any active alert for today or future
+  let activeDate = null;
+  let activeAlert = null;
+  for (const [date, alert] of Object.entries(alerts)) {
+    if (alert.active && !isPast(pd(date))) {
+      activeDate = date;
+      activeAlert = alert;
+      break;
+    }
+  }
+
+  if (activeDate && activeAlert) {
+    const day = DATA.find(d => d.date === activeDate);
+    if (day) {
+      const original = day.collect;
+      const adjusted = addMinutes(original, DELAY_MINUTES);
+      const d = pd(activeDate);
+      body.innerHTML = `
+        Yusuf has gone low during his exam on <strong>${fmt(d)}</strong>.<br>
+        The exam is paused and will be extended by ${DELAY_MINUTES} minutes under JCQ regulations.<br><br>
+        <div class="alert-time-box">
+          <span class="original">${original}</span> → <strong>${adjusted}</strong>
+        </div>
+        <br>Adjusted school collection time shown above.
+      `;
+      banner.classList.add('active');
+    }
+  } else {
+    banner.classList.remove('active');
+  }
+}
+
+function updateParentButtons() {
+  const today = todayStr();
+  const alert = alerts[today];
+  const trigger = document.getElementById('hypoTrigger');
+  const clear = document.getElementById('hypoClear');
+  if (alert && alert.active) {
+    trigger.style.display = 'none';
+    clear.style.display = 'flex';
+  } else {
+    trigger.style.display = 'flex';
+    clear.style.display = 'none';
+  }
+}
+
+async function triggerAlert() {
+  const today = todayStr();
+  const day = DATA.find(d => d.date === today);
+  if (!day) {
+    alert('No exam scheduled today. Alert can only be triggered on exam days.');
+    return;
+  }
+
+  const btn = document.getElementById('hypoTrigger');
+  btn.disabled = true;
+  btn.innerHTML = 'Sending…';
+
+  if (!ALERT_SERVER_URL) {
+    // Offline mode — update locally
+    alerts[today] = { active: true, triggeredAt: new Date().toISOString(), delayMinutes: DELAY_MINUTES };
+    render(); updateAlertBanner(); updateParentButtons();
+    return;
+  }
+
+  try {
+    const res = await fetch(ALERT_SERVER_URL + '/alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: today })
+    });
+    if (!res.ok) throw new Error('Server error');
+    // SSE will handle the state update
+  } catch (e) {
+    console.error('Alert trigger failed:', e);
+    alert('Failed to send alert. Check server connection.');
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Trigger Hypo Alert';
+  }
+}
+
+async function clearAlert() {
+  const today = todayStr();
+  const btn = document.getElementById('hypoClear');
+  btn.disabled = true;
+  btn.innerHTML = 'Clearing…';
+
+  if (!ALERT_SERVER_URL) {
+    if (alerts[today]) alerts[today].active = false;
+    render(); updateAlertBanner(); updateParentButtons();
+    return;
+  }
+
+  try {
+    await fetch(ALERT_SERVER_URL + '/clear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: today })
+    });
+  } catch (e) {
+    console.error('Clear failed:', e);
+    alert('Failed to clear alert. Check server connection.');
+    btn.disabled = false;
+    btn.innerHTML = '✓ Clear Alert';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════════════
 let af='all',vm='detail';
+
+const carI=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-5H7L5 12z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>`;
+const schI=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22V8l10-6 10 6v14"/><path d="M6 12v6h4v-6"/><path d="M14 12v6h4v-6"/><path d="M12 7v1"/></svg>`;
+const bookI=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`;
 
 function buildStats(){
   const te=DATA.reduce((a,d)=>a+d.exams.length,0);
   const now=new Date();now.setHours(0,0,0,0);
   const rem=DATA.filter(d=>pd(d.date)>=now).reduce((a,d)=>a+d.exams.length,0);
-  const nextDay=DATA.find(d=>pd(d.date)>=now);
-  const nextStr=nextDay?fmt(pd(nextDay.date)):'All done!';
   document.getElementById('stats').innerHTML=
     `<div class="stat"><div class="stat-val">${DATA.length}</div><div class="stat-label">Exam Days</div></div>`+
     `<div class="stat"><div class="stat-val">${te}</div><div class="stat-label">Papers</div></div>`+
@@ -232,27 +551,43 @@ function buildLegend(){
   document.getElementById('legend').innerHTML=h;
 }
 
-const carI=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-5H7L5 12z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>`;
-const schI=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22V8l10-6 10 6v14"/><path d="M6 12v6h4v-6"/><path d="M14 12v6h4v-6"/><path d="M12 7v1"/></svg>`;
-
 function render(){
   const tl=document.getElementById('timeline');
   tl.className='timeline'+(vm==='list'?' list-view':'');
   let h='',cm='',dl=0;
-  DATA.forEach(day=>{
+  const now=new Date();now.setHours(0,0,0,0);
+
+  // In driver mode, only show today and future
+  const filteredData = isDriver ? DATA.filter(d => pd(d.date) >= now) : DATA;
+
+  // In driver mode, show max 3 upcoming days
+  const displayData = isDriver ? filteredData.slice(0, 3) : filteredData;
+
+  displayData.forEach(day=>{
     const d=pd(day.date),today=isToday(d),past=isPast(d);
     const fe=af==='all'?day.exams:day.exams.filter(e=>e.cat===af);
     if(!fe.length)return;
     const m=MO[d.getMonth()]+' '+d.getFullYear();
     if(m!==cm){cm=m;h+=`<div class="month-label">${m}</div>`;}
-    const cls='day-card'+(today?' is-today':'')+(past&&!today?' is-past':'');
+
+    const hasAlert = alerts[day.date] && alerts[day.date].active;
+    const cls='day-card'+(today?' is-today':'')+(past&&!today?' is-past':'')+(hasAlert?' has-alert':'');
+
     h+=`<div class="${cls}" style="animation-delay:${dl*40}ms">`;
     h+=`<div class="day-header"><div class="day-date-circle"><span class="dn">${d.getDate()}</span><span class="da">${DAYS[d.getDay()].slice(0,3)}</span></div>`;
     h+=`<div class="day-meta"><div class="df">${fmt(d)}</div><div class="ds">${fe.length} paper${fe.length>1?'s':''} &middot; ${fe.map(e=>e.subj).filter((v,i,a)=>a.indexOf(v)===i).join(', ')}</div></div>`;
-    h+=`<div class="day-badges">${today?'<span class="today-badge">Today</span>':''}${fe.length>=3?'<span class="badge-count">Heavy day</span>':''}</div></div>`;
+    h+=`<div class="day-badges">${today?'<span class="today-badge">Today</span>':''}${fe.length>=3?'<span class="badge-count">Heavy day</span>':''}${hasAlert?'<span class="badge-count" style="background:#fef0ee;color:#c0392b">⚠ Hypo Alert</span>':''}</div></div>`;
+
+    // Transport row
+    const collectTime = hasAlert ? addMinutes(day.collect, DELAY_MINUTES) : day.collect;
+    const collectClass = hasAlert ? 'transport-chip collect delayed' : 'transport-chip collect';
+
     h+=`<div class="transport"><div class="transport-chip pickup">${carI}<div><div class="tl">Home pickup</div><strong>${day.pickup}</strong></div></div>`;
-    h+=`<div class="transport-chip collect">${schI}<div><div class="tl">School collect</div><strong>${day.collect}</strong></div></div></div>`;
-    if(day.note) h+=`<div class="transport-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>${day.note}</div>`;
+    h+=`<div class="${collectClass}">${schI}<div><div class="tl">School collect${hasAlert ? ' (delayed)' : ''}</div><strong>${collectTime}</strong>${hasAlert ? `<div class="delayed-note">Was ${day.collect} · +${DELAY_MINUTES}min hypo</div>` : ''}</div></div></div>`;
+
+    // Library note
+    if(day.note) h+=`<div class="transport-note">${bookI}${day.note}</div>`;
+
     fe.forEach(ex=>{
       h+=`<div class="exam-row subj-${ex.cat}"><div class="exam-time">${ex.time}</div><div class="exam-dot"></div>`;
       h+=`<div class="exam-info"><div class="exam-subject">${ex.subj}</div><div class="exam-component">${ex.comp}</div></div>`;
@@ -260,12 +595,26 @@ function render(){
     });
     h+=`</div>`;dl++;
   });
+
+  if (isDriver && displayData.length === 0) {
+    h = '<div style="text-align:center;padding:3rem;color:var(--text-dim);font-size:1.1rem;">All exams complete ✓</div>';
+  }
+
   tl.innerHTML=h;
   const tc=tl.querySelector('.is-today');
   if(tc)setTimeout(()=>tc.scrollIntoView({behavior:'smooth',block:'center'}),300);
 }
 
-buildStats();buildControls();buildLegend();render();
+// ════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════
+buildStats();
+if (!isDriver) { buildControls(); buildLegend(); }
+render();
+connectSSE();
+
+// Refresh stats every minute (for completion tracking)
+setInterval(buildStats, 60000);
 </script>
 </body>
 </html>
